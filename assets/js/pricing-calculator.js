@@ -24,10 +24,14 @@ const formatAmount = (amount, fixedFractionDigits) => {
 
 const formatQuantity = (value) => formatNumber(value, { maximumFractionDigits: 3 });
 
-const findProduct = (products, { category, name }) => {
+// The category paths a slug from `categories` in _data/pricing.yml stands for.
+// An unknown slug matches nothing, so its slot shows up in missingSlots.
+const categoryPaths = (config, slug) => config.categories?.[slug] ?? [];
+
+const findProduct = (products, paths, name) => {
   const inCategory = products.filter((product) => {
     const path = Array.isArray(product.categ_id) ? product.categ_id[1] : '';
-    return product.active !== false && path.includes(category);
+    return product.active !== false && paths.includes(path);
   });
   const needle = name.toLowerCase();
   return (
@@ -64,7 +68,7 @@ const toSlot = (product, language) => {
 };
 
 const buildCatalog = (products, config, language = 'de') => {
-  const slot = (matcher) => toSlot(findProduct(products, matcher), language);
+  const slot = ({ category, name }) => toSlot(findProduct(products, categoryPaths(config, category), name), language);
   const catalog = { app: {}, single: {}, dedicated: {}, kvs: {}, search: {}, addOns: {} };
 
   config.app.forEach((entry) => {

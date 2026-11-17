@@ -26,6 +26,54 @@ test('every configured slot resolves to a product', () => {
   assert.deepEqual(calculator.missingSlots(catalog), []);
 });
 
+test('every category slug used by a slot is defined', () => {
+  const used = [
+    ...config.app.map((entry) => entry.category),
+    ...config.database.engines.flatMap((engine) => [engine.single_category, engine.dedicated_category]),
+    ...config.key_value_store.map((entry) => entry.category),
+    config.search.category,
+    ...Object.values(config.add_ons).map((matcher) => matcher.category),
+  ];
+  assert.deepEqual(
+    [...new Set(used)].filter((slug) => !config.categories[slug]),
+    [],
+  );
+});
+
+// The product data drops the "N) " ordering prefixes and renames "Deploio" to
+// "Deploio (PaaS)" (odoo-connector#162). Both the current and the renamed
+// paths are mapped in `categories`, so the calculator keeps working on either.
+test('slots resolve to the same products after the category rename', () => {
+  const renamePath = (path) =>
+    path
+      .split(' / ')
+      .map((segment) => segment.replace(/^\d+\)\s*/, ''))
+      .map((segment) => (segment === 'Deploio' ? 'Deploio (PaaS)' : segment))
+      .join(' / ');
+  const renamed = products.map((product) => ({
+    ...product,
+    categ_id: [product.categ_id[0], renamePath(product.categ_id[1])],
+  }));
+  assert.notDeepEqual(
+    renamed.map((product) => product.categ_id[1]),
+    products.map((product) => product.categ_id[1]),
+  );
+
+  const renamedCatalog = calculator.buildCatalog(renamed, config, 'en');
+  assert.deepEqual(calculator.missingSlots(renamedCatalog), []);
+  assert.deepEqual(renamedCatalog, catalog);
+});
+
+test('a category path that is not mapped matches nothing', () => {
+  const unmapped = products.map((product) => ({
+    ...product,
+    categ_id: [product.categ_id[0], product.categ_id[1].replace('Deploio', 'Something Else')],
+  }));
+  const missing = calculator.missingSlots(calculator.buildCatalog(unmapped, config, 'en'));
+  assert.ok(missing.includes('app.micro'));
+  assert.ok(missing.includes('addOns.static_egress'));
+});
+
 test('slots pick the expected products', () => {
   assert.equal(catalog.app.mini.price, 17.5);
   assert.equal(catalog.single.mysql.m.price, 9.9);
