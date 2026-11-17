@@ -41,11 +41,14 @@ const findProduct = (products, paths, name) => {
   );
 };
 
-const productSpecs = (product) => {
+// Specs come from the products a product includes (`includes`, by slug). The
+// API lists the included products too, so their names ("Application RAM (GB)",
+// "vCPU", ...) are looked up in `namesBySlug`.
+const productSpecs = (product, namesBySlug) => {
   const specs = {};
-  (product.bundle_products || []).forEach((item) => {
-    const component = Array.isArray(item.sh_product_id) ? item.sh_product_id[1] : '';
-    const quantity = Number(item.sh_qty);
+  (product.includes || []).forEach((item) => {
+    const component = namesBySlug.get(item.product_id) ?? '';
+    const quantity = Number(item.quantity);
     if (/RAM/.test(component)) {
       specs.ram = quantity;
       specs.ramUnit = /\(GB\)/.test(component) ? 'GB' : 'GiB';
@@ -56,19 +59,21 @@ const productSpecs = (product) => {
   return specs;
 };
 
-const toSlot = (product, language) => {
+const toSlot = (product, language, namesBySlug) => {
   if (!product) return null;
   const german = language === 'de';
   return {
-    name: (german && product.name_de) || product.display_name || product.name,
+    name: (german && product.name_de) || product.name,
     description: (german && product.description_sale_de) || product.description_sale || '',
     price: Number(product.list_price),
-    specs: productSpecs(product),
+    specs: productSpecs(product, namesBySlug),
   };
 };
 
 const buildCatalog = (products, config, language = 'de') => {
-  const slot = ({ category, name }) => toSlot(findProduct(products, categoryPaths(config, category), name), language);
+  const namesBySlug = new Map(products.map((product) => [product.product_id, product.name]));
+  const slot = ({ category, name }) =>
+    toSlot(findProduct(products, categoryPaths(config, category), name), language, namesBySlug);
   const catalog = { app: {}, single: {}, dedicated: {}, kvs: {}, search: {}, addOns: {} };
 
   config.app.forEach((entry) => {

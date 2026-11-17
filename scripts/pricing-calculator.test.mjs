@@ -86,7 +86,7 @@ test('slots pick the expected products', () => {
   assert.equal(catalog.addOns.object_storage_space.price, 0.033);
 });
 
-test('specs come from bundle contents', () => {
+test('specs come from the included products', () => {
   assert.deepEqual(calculator.specLines(catalog.app.standard_1, strings), ['1 GB RAM', '0.5 vCPU']);
   assert.deepEqual(calculator.specLines(catalog.search.multi.m, strings), [
     '3 nodes',
@@ -94,6 +94,16 @@ test('specs come from bundle contents', () => {
     '12 vCPU',
     '180 GiB storage',
   ]);
+  assert.deepEqual(calculator.specLines(catalog.kvs[config.key_value_store[0].key], strings), [
+    '0.25 GiB RAM',
+    '0.5 GiB storage',
+  ]);
+});
+
+test('an included product missing from the API adds no spec', () => {
+  const withoutCpu = products.filter((product) => product.product_id !== 'applicationCPU');
+  const partial = calculator.buildCatalog(withoutCpu, config, 'en');
+  assert.deepEqual(calculator.specLines(partial.app.standard_1, strings), ['1 GB RAM']);
 });
 
 test('the page starts with the default preset', () => {
