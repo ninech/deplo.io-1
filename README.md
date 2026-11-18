@@ -4,7 +4,7 @@
 
 | Branch  | Domain                               | Deployment |
 | ------- | ------------------------------------ | ---------- |
-| develop | https://develop.5666d75.deploio.app/ | auto       |
+| develop | https://develop.b5139db.deploio.app  | auto       |
 | main    | https://deplo.io                     | release    |
 
 - [Deplo.io Contact Request Tracker](https://docs.google.com/spreadsheets/d/131rDpYeXOnmWOocurwgg0tjId01k5rn2navTFBl51dQ/edit?gid=0#gid=0)
