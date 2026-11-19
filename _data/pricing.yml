@@ -4,46 +4,25 @@
 
 vat_rate: 8.1
 
-# Category slugs used by the slots below, each mapped to every full category
-# path (the product's `categ_id` name) it stands for. A product belongs to a
-# slug when its path equals one of the listed paths exactly.
+# Category slugs used by the slots below, each mapped to the id of the category
+# it stands for (the product's `category_id`, a typeid like `cat_…`). A product
+# belongs to a slug when its `category_id` equals that id.
 #
-# This is the one place to touch when categories get renamed in the product
-# data: add the new path next to the old one before the rename goes live, so
-# both match during the switch, and drop the old path afterwards.
+# Category ids do not change when a category is renamed, so renames in the
+# product data need no change here. The comments name each category as of
+# writing, for readability only.
 categories:
-  deploio_resources:
-    - All / Deploio / 1) Resources
-    - All / Deploio (PaaS) / Resources
-  deploio_services:
-    - All / Deploio / 2) Services
-    - All / Deploio (PaaS) / Services
-  key_value_store:
-    - All / On-Demand Services / 1) Key Value Store
-    - All / On-Demand Services / Key Value Store
-  mysql_engine:
-    - All / On-Demand Services / 2) MySQL Engine
-    - All / On-Demand Services / MySQL Engine
-  mysql_single_database:
-    - All / On-Demand Services / 3) MySQL Single Database
-    - All / On-Demand Services / MySQL Single Database
-  postgresql_engine:
-    - All / On-Demand Services / 4) PostgreSQL Engine
-    - All / On-Demand Services / PostgreSQL Engine
-  postgresql_single_database:
-    - All / On-Demand Services / 5) PostgreSQL Single Database
-    - All / On-Demand Services / PostgreSQL Single Database
-  search:
-    - All / On-Demand Services / 6) Search
-    - All / On-Demand Services / Search
-  additional_resources:
-    - All / On-Demand Services / 7) Additional Resources
-    - All / On-Demand Services / Additional Resources
-  monitoring_logging:
-    - All / On-Demand Services / 8) Monitoring & Logging
-    - All / On-Demand Services / Monitoring & Logging
-  object_storage:
-    - All / Object Storage / v2
+  deploio_resources: cat_01ktvj4enne28aj6xes673v4f2 # Deploio (PaaS) / Resources
+  deploio_services: cat_01ktvj4enne28v4efs5qefdkx5 # Deploio (PaaS) / Services
+  key_value_store: cat_01ktvj4enne30seq2pzc6vx4f4 # On-Demand Services / Key Value Store
+  mysql_engine: cat_01ktvj4enne318rwrbh7121mrm # On-Demand Services / MySQL Engine
+  mysql_single_database: cat_01ktvj4enne31rwv6bg79qxmqk # On-Demand Services / MySQL Single Database
+  postgresql_engine: cat_01ktvj4enne3284j2temj6695c # On-Demand Services / PostgreSQL Engine
+  postgresql_single_database: cat_01ktvj4enne32tch43wdr2dnrw # On-Demand Services / PostgreSQL Single Database
+  search: cat_01ktvj4enne33a7qk92e52vab8 # On-Demand Services / Search
+  additional_resources: cat_01ktvj4enne33v5hvs5hbd14t7 # On-Demand Services / Additional Resources
+  monitoring_logging: cat_01m0d95txk9vnpjnfgknejyct0 # On-Demand Services / Monitoring & Logging
+  object_storage: cat_01ktvj4enne2zt6h5q69fxnafv # Object Storage / Object Storage
 
 app:
   - key: micro

@@ -40,38 +40,51 @@ test('every category slug used by a slot is defined', () => {
   );
 });
 
-// The product data drops the "N) " ordering prefixes and renames "Deploio" to
-// "Deploio (PaaS)" (odoo-connector#162). Both the current and the renamed
-// paths are mapped in `categories`, so the calculator keeps working on either.
-test('slots resolve to the same products after the category rename', () => {
-  const renamePath = (path) =>
-    path
-      .split(' / ')
-      .map((segment) => segment.replace(/^\d+\)\s*/, ''))
-      .map((segment) => (segment === 'Deploio' ? 'Deploio (PaaS)' : segment))
-      .join(' / ');
+test('every category slug maps to one category id', () => {
+  Object.entries(config.categories).forEach(([slug, id]) => {
+    assert.match(id, /^cat_[0-9a-z]{26}$/, slug);
+  });
+});
+
+// Slots are matched by category id, so renaming categories in the product data
+// (odoo-connector#162: no "N) " prefixes, "Deploio (PaaS)", "Object Storage")
+// changes nothing.
+test('category names do not matter, only category ids', () => {
   const renamed = products.map((product) => ({
     ...product,
-    categ_id: [product.categ_id[0], renamePath(product.categ_id[1])],
+    categ_id: [product.categ_id[0], `All / Renamed ${product.categ_id[1]}`],
+    categ_path: ['All', 'Renamed'],
   }));
-  assert.notDeepEqual(
-    renamed.map((product) => product.categ_id[1]),
-    products.map((product) => product.categ_id[1]),
-  );
-
   const renamedCatalog = calculator.buildCatalog(renamed, config, 'en');
   assert.deepEqual(calculator.missingSlots(renamedCatalog), []);
   assert.deepEqual(renamedCatalog, catalog);
 });
 
-test('a category path that is not mapped matches nothing', () => {
-  const unmapped = products.map((product) => ({
-    ...product,
-    categ_id: [product.categ_id[0], product.categ_id[1].replace('Deploio', 'Something Else')],
-  }));
+test('a product whose category id is not mapped matches nothing', () => {
+  const deploioResources = config.categories.deploio_resources;
+  const unmapped = products.map((product) =>
+    product.category_id === deploioResources ? { ...product, category_id: 'cat_00000000000000000000000000' } : product,
+  );
   const missing = calculator.missingSlots(calculator.buildCatalog(unmapped, config, 'en'));
   assert.ok(missing.includes('app.micro'));
-  assert.ok(missing.includes('addOns.static_egress'));
+  assert.ok(!missing.includes('addOns.static_egress'));
+});
+
+// The API also lists the products other products include (e.g. `databaseS`,
+// named "nine-single-db-s"), in their real category but without the
+// calculator tag. Only calculator products are offered.
+test('only products tagged calculator are offered', () => {
+  const offered = products.find((product) => product.product_id === 'mysqlSingleDbS');
+  const included = products.find((product) => product.product_id === 'databaseS');
+  assert.equal(included.category_id, offered.category_id);
+  assert.equal(catalog.single.mysql.s.name, offered.name);
+});
+
+test('a product without a category id matches nothing', () => {
+  const withoutIds = products.map(({ category_id, ...product }) => product);
+  const missing = calculator.missingSlots(calculator.buildCatalog(withoutIds, config, 'en'));
+  assert.ok(missing.includes('app.micro'));
+  assert.ok(missing.includes('addOns.object_storage_space'));
 });
 
 test('slots pick the expected products', () => {
